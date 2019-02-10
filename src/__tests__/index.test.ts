@@ -1,4 +1,4 @@
-import axios from "axios";
+import fetch from "cross-fetch";
 import targetPosition, { setMirror, IPosition } from "../index";
 
 // A NOTE ON LANGUAGE:
@@ -43,11 +43,11 @@ describe("targetPosition", () => {
 
   beforeEach(() => {
     setMirror(MOCK_MIRROR_URL);
-    (axios as any).get.mockReset();
+    (fetch as any).mockReset();
   });
 
   afterEach(() => {
-    (axios as any).get.mockReset();
+    (fetch as any).mockReset();
   });
 
   // target name checks
@@ -119,7 +119,7 @@ describe("targetPosition", () => {
 
   it("should return a rejected promise if a network error occurs", async () => {
     expect.assertions(1);
-    (axios as any).get.mockRejectedValue({ request: {} });
+    (fetch as any).mockRejectedValue({ request: {} });
     return targetPosition("A", ["Simbad"]).catch(err =>
       expect(err).toContain(
         `No response has been received from ${MOCK_MIRROR_URL}`
@@ -130,7 +130,7 @@ describe("targetPosition", () => {
   it("should return a rejected promise if Sesame is not happy", async () => {
     expect.assertions(1);
     const error = "Sesame is not happy.";
-    (axios as any).get.mockRejectedValue({ response: { data: error } });
+    (fetch as any).mockRejectedValue({ response: { data: error } });
     return targetPosition("A", ["Simbad"]).catch(err =>
       expect(err).toEqual(error)
     );
@@ -139,7 +139,7 @@ describe("targetPosition", () => {
   it("should return a rejected promise if a generic error occurs while resolving the target name", () => {
     expect.assertions(1);
     const error = "The target name could not be resolved because of an error.";
-    (axios as any).get.mockRejectedValue({ message: error });
+    (fetch as any).mockRejectedValue({ message: error });
     return targetPosition("A", ["Simbad"]).catch(err =>
       expect(err).toContain(error)
     );
@@ -148,50 +148,58 @@ describe("targetPosition", () => {
   // URL used for resolving the target name
 
   it("should encode the target name in the URL", async () => {
-    (axios as any).get.mockResolvedValue({ data: targetXml("0", "0") });
+    (fetch as any).mockResolvedValue({
+      text: () => Promise.resolve(targetXml("0", "0"))
+    });
     await targetPosition("A Nice Target", ["Simbad"]);
 
-    expect(axios.get).toHaveBeenCalledWith(
+    expect(fetch).toHaveBeenCalledWith(
       `${MOCK_MIRROR_URL}/-ox/S?A%20Nice%20Target`
     );
   });
 
   it("should use the correct code for the resolvers in the URL", async () => {
-    (axios as any).get.mockResolvedValue({ data: targetXml("0", "0") });
+    (fetch as any).mockResolvedValue({
+      text: () => Promise.resolve(targetXml("0", "0"))
+    });
 
     // default resolver combination
     await targetPosition("A");
-    expect(axios.get).toHaveBeenCalledWith(`${MOCK_MIRROR_URL}/-ox/SNV?A`);
-    (axios as any).get.mockClear();
+    expect(fetch).toHaveBeenCalledWith(`${MOCK_MIRROR_URL}/-ox/SNV?A`);
+    (fetch as any).mockClear();
 
     // single resolver
     await targetPosition("A", ["VizieR"]);
-    expect(axios.get).toHaveBeenCalledWith(`${MOCK_MIRROR_URL}/-ox/V?A`);
-    (axios as any).get.mockClear();
+    expect(fetch).toHaveBeenCalledWith(`${MOCK_MIRROR_URL}/-ox/V?A`);
+    (fetch as any).mockClear();
 
     // two resolvers
     await targetPosition("A", ["VizieR", "Simbad"]);
-    expect(axios.get).toHaveBeenCalledWith(`${MOCK_MIRROR_URL}/-ox/VS?A`);
-    (axios as any).get.mockClear();
+    expect(fetch).toHaveBeenCalledWith(`${MOCK_MIRROR_URL}/-ox/VS?A`);
+    (fetch as any).mockClear();
 
     // three resolvers
     await targetPosition("A", ["VizieR", "Simbad", "NED"]);
-    expect(axios.get).toHaveBeenCalledWith(`${MOCK_MIRROR_URL}/-ox/VSN?A`);
-    (axios as any).get.mockClear();
+    expect(fetch).toHaveBeenCalledWith(`${MOCK_MIRROR_URL}/-ox/VSN?A`);
+    (fetch as any).mockClear();
   });
 
   it("should ignore case for the resolver names", async () => {
-    (axios as any).get.mockResolvedValue({ data: targetXml("0", "0") });
+    (fetch as any).mockResolvedValue({
+      text: () => Promise.resolve(targetXml("0", "0"))
+    });
     const resolvers: any = ["sImbAD", "VIZIEr", "ned"]; // Fool TypeScript
     await targetPosition("A", resolvers);
-    expect(axios.get).toHaveBeenCalledWith(`${MOCK_MIRROR_URL}/-ox/SVN?A`);
-    (axios as any).get.mockClear();
+    expect(fetch).toHaveBeenCalledWith(`${MOCK_MIRROR_URL}/-ox/SVN?A`);
+    (fetch as any).mockClear();
   });
 
   // handling the result returned by Sesame
 
   it("should return a promise resolved with null if the target name cannot be resolved", async () => {
-    (axios as any).get.mockResolvedValue({ data: NO_TARGET_XML });
+    (fetch as any).mockResolvedValue({
+      text: () => Promise.resolve(NO_TARGET_XML)
+    });
     const position = await targetPosition("A");
     expect(position).toBeNull();
   });
@@ -204,7 +212,9 @@ describe("targetPosition", () => {
       expect(received.equinox).toBeCloseTo(other.equinox, 6);
     };
 
-    (axios as any).get.mockResolvedValue({ data: targetXml("0", "0") });
+    (fetch as any).mockResolvedValue({
+      text: () => Promise.resolve(targetXml("0", "0"))
+    });
     let position = await targetPosition("A");
     comparePositions(position as IPosition, {
       rightAscension: 0,
@@ -212,8 +222,8 @@ describe("targetPosition", () => {
       equinox: 2000
     });
 
-    (axios as any).get.mockResolvedValue({
-      data: targetXml("000.3998923642", "+05.982345")
+    (fetch as any).mockResolvedValue({
+      text: () => Promise.resolve(targetXml("000.3998923642", "+05.982345"))
     });
     position = await targetPosition("A");
     comparePositions(position as IPosition, {
@@ -222,8 +232,8 @@ describe("targetPosition", () => {
       equinox: 2000
     });
 
-    (axios as any).get.mockResolvedValue({
-      data: targetXml("-00.3998923642", "-05.982345")
+    (fetch as any).mockResolvedValue({
+      text: () => Promise.resolve(targetXml("-00.3998923642", "-05.982345"))
     });
     position = await targetPosition("A");
     comparePositions(position as IPosition, {
@@ -232,8 +242,8 @@ describe("targetPosition", () => {
       equinox: 2000
     });
 
-    (axios as any).get.mockResolvedValue({
-      data: targetXml("+10.895787", "+123.1055345")
+    (fetch as any).mockResolvedValue({
+      text: () => Promise.resolve(targetXml("+10.895787", "+123.1055345"))
     });
     position = await targetPosition("A");
     comparePositions(position as IPosition, {
@@ -242,8 +252,8 @@ describe("targetPosition", () => {
       equinox: 2000
     });
 
-    (axios as any).get.mockResolvedValue({
-      data: targetXml("-0099.7654321", "-123.1055345")
+    (fetch as any).mockResolvedValue({
+      text: () => Promise.resolve(targetXml("-0099.7654321", "-123.1055345"))
     });
     position = await targetPosition("A");
     comparePositions(position as IPosition, {
