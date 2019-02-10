@@ -1,4 +1,4 @@
-import axios, { AxiosResponse } from "axios";
+import fetch from "cross-fetch";
 import { parseString } from "xml2js";
 
 let BASE_URL = "https://cdsweb.u-strasbg.fr/cgi-bin/nph-sesame/-oX";
@@ -80,12 +80,12 @@ export default function targetPosition(
     const url = `${BASE_URL}/-ox/${resolverCode}?${encodedTargetName}`;
 
     // Query Sesame
-    axios
-      .get(url)
-      .then((res: AxiosResponse) => {
+    fetch(url)
+      .then(res => res.text())
+      .then(xml => {
         /* tslint:disable:no-unsafe-any */
         // extract the target
-        parseString(res.data, (err, root) => {
+        parseString(xml, (err, root) => {
           const resolver = root.Sesame.Target[0].Resolver;
           if (!resolver || resolver.length === 0) {
             // No target has been found for the name
@@ -129,9 +129,3 @@ export default function targetPosition(
 export function setMirror(url: string) {
   BASE_URL = url;
 }
-
-const f = async () => {
-  const r = await targetPosition("HIP123");
-};
-
-f();
