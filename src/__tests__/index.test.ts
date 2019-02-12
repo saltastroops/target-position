@@ -55,14 +55,14 @@ describe("targetPosition", () => {
   it("should return a rejected promise if the target name is an empty string", () => {
     expect.assertions(1);
     return targetPosition("").catch(err =>
-      expect(err).toContain("target name")
+      expect(err.message).toContain("target name")
     );
   });
 
   it("should return a rejected promise if the target name only contains white space", () => {
     expect.assertions(1);
     return targetPosition(" \t  \n\n ").catch(err =>
-      expect(err).toContain("target name")
+      expect(err.message).toContain("target name")
     );
   });
 
@@ -70,7 +70,7 @@ describe("targetPosition", () => {
     expect.assertions(1);
     const name: any = null; // Fool TypeScript into accepting null
     return targetPosition(name).catch(err =>
-      expect(err).toContain("target name")
+      expect(err.message).toContain("target name")
     );
   });
 
@@ -78,7 +78,7 @@ describe("targetPosition", () => {
     expect.assertions(1);
     const name: any = undefined; // Fool TypeScript into accepting undefined
     return targetPosition(name).catch(err =>
-      expect(err).toContain("target name")
+      expect(err.message).toContain("target name")
     );
   });
 
@@ -87,7 +87,7 @@ describe("targetPosition", () => {
   it("should return a rejected promise if an empty array of resolvers is given", () => {
     expect.assertions(1);
     return targetPosition("A", []).catch(err =>
-      expect(err).toContain("At least one resolver")
+      expect(err.message).toContain("At least one resolver")
     );
   });
 
@@ -95,7 +95,7 @@ describe("targetPosition", () => {
     expect.assertions(1);
     const resolvers: any = ["Simbad", "Xft56", "NED"]; // Fool TypeScript into accepting an invalid resolver
     return targetPosition("A", resolvers).catch(err =>
-      expect(err).toMatch(/resolver is.*: Xft56/)
+      expect(err.message).toMatch(/resolver is.*: Xft56/)
     );
   });
 
@@ -103,7 +103,7 @@ describe("targetPosition", () => {
     expect.assertions(1);
     const resolvers: any = ["Simbad", "Xft56", "NED", "A56tyu"]; // Fool TypeScript into accepting invalid resolvers
     return targetPosition("A", resolvers).catch(err =>
-      expect(err).toMatch(/resolvers are.*: Xft56, A56tyu/)
+      expect(err.message).toMatch(/resolvers are.*: Xft56, A56tyu/)
     );
   });
 
@@ -111,7 +111,7 @@ describe("targetPosition", () => {
     expect.assertions(1);
     const resolvers: any = ["Simbad", "NED", "simbad", "VizieR"]; // Fool TypeScript into accepting the resolvers
     return targetPosition("A", resolvers).catch(err =>
-      expect(err).toContain("used only once")
+      expect(err.message).toContain("used only once")
     );
   });
 
