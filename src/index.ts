@@ -69,17 +69,19 @@ export default function targetPosition(
     );
     if (unsupportedResolvers.length > 0) {
       return reject(
-        new Error(`The following resolver${
-          unsupportedResolvers.length !== 1 ? "s are" : " is"
+        new Error(
+          `The following resolver${
+            unsupportedResolvers.length !== 1 ? "s are" : " is"
           } not supported: ${unsupportedResolvers.join(
-          ", "
-        )}. The available resolvers are Simbad, NED and VizieR.`)
+            ", "
+          )}. The available resolvers are Simbad, NED and VizieR.`
+        )
       );
     }
 
     // Use lower case throughout for consistency
     const lowerCaseResolvers = resolvers.map(resolver =>
-                                               resolver.toLowerCase()
+      resolver.toLowerCase()
     );
 
     // Check that there is at least one resolver
@@ -101,14 +103,14 @@ export default function targetPosition(
     const resolverCode = lowerCaseResolvers
       .map(resolver => {
         switch (resolver) {
-        case "simbad":
-          return "S";
-        case "ned":
-          return "N";
-        case "vizier":
-          return "V";
-        default:
-          return "";
+          case "simbad":
+            return "S";
+          case "ned":
+            return "N";
+          case "vizier":
+            return "V";
+          default:
+            return "";
         }
       })
       .join("");
@@ -118,18 +120,22 @@ export default function targetPosition(
 
     // Parse the response text
     // (cf https://github.com/github/fetch/issues/203#issuecomment-266034180)
-    const parseText = (res: Response): Promise<{ text: string, ok: boolean }> => {
-      return new Promise((resolve, reject) => {
-        res.text().then(text => {
-          resolve({
-                    text,
-                    ok: res.ok
-                  });
-        })
-          .catch(err => {
-            reject(err);
+    const parseText = (
+      res: Response
+    ): Promise<{ text: string; ok: boolean }> => {
+      return new Promise((innerResolve, innerReject) => {
+        res
+          .text()
+          .then(text => {
+            innerResolve({
+              ok: res.ok,
+              text
+            });
           })
-      })
+          .catch(err => {
+            innerReject(err);
+          });
+      });
     };
 
     // Query Sesame
@@ -155,10 +161,10 @@ export default function targetPosition(
           const dec = parseFloat(resolver[0].jdedeg);
           if (!isNaN(ra) && !isNaN(dec)) {
             return resolve({
-                             declination: dec,
-                             equinox: 2000,
-                             rightAscension: ra
-                           });
+              declination: dec,
+              equinox: 2000,
+              rightAscension: ra
+            });
           }
 
           // We should never get here
