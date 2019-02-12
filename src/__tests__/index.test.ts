@@ -119,7 +119,7 @@ describe("targetPosition", () => {
 
   it("should return a rejected promise if a network error occurs", async () => {
     expect.assertions(1);
-    const error = 'There was a problem with accessing the web service.';
+    const error = "There was a problem with accessing the web service.";
     (fetch as any).mockRejectedValue(new Error(error));
     return targetPosition("A", ["Simbad"]).catch(err =>
       expect(err.message).toEqual(error)
@@ -129,7 +129,10 @@ describe("targetPosition", () => {
   it("should return a rejected promise if Sesame is not happy", async () => {
     expect.assertions(1);
     const error = "Sesame is not happy.";
-    (fetch as any).mockResolvedValue({ text: () => Promise.resolve(error), ok: false });
+    (fetch as any).mockResolvedValue({
+      text: () => Promise.resolve(error),
+      ok: false
+    });
     return targetPosition("A", ["Simbad"]).catch(err =>
       expect(err.message).toEqual(error)
     );
