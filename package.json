@@ -2,12 +2,16 @@
   "name": "target-position",
   "version": "0.1.0",
   "description": "Resolve target names to positions using the Sesame web service.",
-  "main": "index.js",
+  "main": "lib/index.js",
+  "types": "lib/index.d.ts",
   "scripts": {
     "build": "tsc",
     "format": "prettier --write package.json src/*.{js,json,md,ts,tsx} src/**/*.{js,json,md,ts,tsx}",
     "lint": "tslint --project tsconfig.json 'src/**/*.{ts,tsx}'",
     "lint:fix": "tslint --fix 'src/**/*.{ts,tsx}'",
+    "postversion" : "git push && git push --tags",
+    "prepublishOnly": "npm test && npm run lint && npm run build",
+    "preversion": "npm test && npm run lint",
     "test": "jest --config jestconfig.json",
     "test:watch": "jest --watch --config jestconfig.json"
   },

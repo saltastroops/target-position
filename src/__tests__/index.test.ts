@@ -55,14 +55,14 @@ describe("targetPosition", () => {
   it("should return a rejected promise if the target name is an empty string", () => {
     expect.assertions(1);
     return targetPosition("").catch(err =>
-      expect(err).toContain("target name")
+      expect(err.message).toContain("target name")
     );
   });
 
   it("should return a rejected promise if the target name only contains white space", () => {
     expect.assertions(1);
     return targetPosition(" \t  \n\n ").catch(err =>
-      expect(err).toContain("target name")
+      expect(err.message).toContain("target name")
     );
   });
 
@@ -70,7 +70,7 @@ describe("targetPosition", () => {
     expect.assertions(1);
     const name: any = null; // Fool TypeScript into accepting null
     return targetPosition(name).catch(err =>
-      expect(err).toContain("target name")
+      expect(err.message).toContain("target name")
     );
   });
 
@@ -78,7 +78,7 @@ describe("targetPosition", () => {
     expect.assertions(1);
     const name: any = undefined; // Fool TypeScript into accepting undefined
     return targetPosition(name).catch(err =>
-      expect(err).toContain("target name")
+      expect(err.message).toContain("target name")
     );
   });
 
@@ -87,7 +87,7 @@ describe("targetPosition", () => {
   it("should return a rejected promise if an empty array of resolvers is given", () => {
     expect.assertions(1);
     return targetPosition("A", []).catch(err =>
-      expect(err).toContain("At least one resolver")
+      expect(err.message).toContain("At least one resolver")
     );
   });
 
@@ -95,7 +95,7 @@ describe("targetPosition", () => {
     expect.assertions(1);
     const resolvers: any = ["Simbad", "Xft56", "NED"]; // Fool TypeScript into accepting an invalid resolver
     return targetPosition("A", resolvers).catch(err =>
-      expect(err).toMatch(/resolver is.*: Xft56/)
+      expect(err.message).toMatch(/resolver is.*: Xft56/)
     );
   });
 
@@ -103,7 +103,7 @@ describe("targetPosition", () => {
     expect.assertions(1);
     const resolvers: any = ["Simbad", "Xft56", "NED", "A56tyu"]; // Fool TypeScript into accepting invalid resolvers
     return targetPosition("A", resolvers).catch(err =>
-      expect(err).toMatch(/resolvers are.*: Xft56, A56tyu/)
+      expect(err.message).toMatch(/resolvers are.*: Xft56, A56tyu/)
     );
   });
 
@@ -111,7 +111,7 @@ describe("targetPosition", () => {
     expect.assertions(1);
     const resolvers: any = ["Simbad", "NED", "simbad", "VizieR"]; // Fool TypeScript into accepting the resolvers
     return targetPosition("A", resolvers).catch(err =>
-      expect(err).toContain("used only once")
+      expect(err.message).toContain("used only once")
     );
   });
 
@@ -119,29 +119,22 @@ describe("targetPosition", () => {
 
   it("should return a rejected promise if a network error occurs", async () => {
     expect.assertions(1);
-    (fetch as any).mockRejectedValue({ request: {} });
+    const error = "There was a problem with accessing the web service.";
+    (fetch as any).mockRejectedValue(new Error(error));
     return targetPosition("A", ["Simbad"]).catch(err =>
-      expect(err).toContain(
-        `No response has been received from ${MOCK_MIRROR_URL}`
-      )
+      expect(err.message).toEqual(error)
     );
   });
 
   it("should return a rejected promise if Sesame is not happy", async () => {
     expect.assertions(1);
     const error = "Sesame is not happy.";
-    (fetch as any).mockRejectedValue({ response: { data: error } });
+    (fetch as any).mockResolvedValue({
+      text: () => Promise.resolve(error),
+      ok: false
+    });
     return targetPosition("A", ["Simbad"]).catch(err =>
-      expect(err).toEqual(error)
-    );
-  });
-
-  it("should return a rejected promise if a generic error occurs while resolving the target name", () => {
-    expect.assertions(1);
-    const error = "The target name could not be resolved because of an error.";
-    (fetch as any).mockRejectedValue({ message: error });
-    return targetPosition("A", ["Simbad"]).catch(err =>
-      expect(err).toContain(error)
+      expect(err.message).toEqual(error)
     );
   });
 
@@ -149,7 +142,8 @@ describe("targetPosition", () => {
 
   it("should encode the target name in the URL", async () => {
     (fetch as any).mockResolvedValue({
-      text: () => Promise.resolve(targetXml("0", "0"))
+      text: () => Promise.resolve(targetXml("0", "0")),
+      ok: true
     });
     await targetPosition("A Nice Target", ["Simbad"]);
 
@@ -160,7 +154,8 @@ describe("targetPosition", () => {
 
   it("should use the correct code for the resolvers in the URL", async () => {
     (fetch as any).mockResolvedValue({
-      text: () => Promise.resolve(targetXml("0", "0"))
+      text: () => Promise.resolve(targetXml("0", "0")),
+      ok: true
     });
 
     // default resolver combination
@@ -186,7 +181,8 @@ describe("targetPosition", () => {
 
   it("should ignore case for the resolver names", async () => {
     (fetch as any).mockResolvedValue({
-      text: () => Promise.resolve(targetXml("0", "0"))
+      text: () => Promise.resolve(targetXml("0", "0")),
+      ok: true
     });
     const resolvers: any = ["sImbAD", "VIZIEr", "ned"]; // Fool TypeScript
     await targetPosition("A", resolvers);
@@ -198,7 +194,8 @@ describe("targetPosition", () => {
 
   it("should return a promise resolved with null if the target name cannot be resolved", async () => {
     (fetch as any).mockResolvedValue({
-      text: () => Promise.resolve(NO_TARGET_XML)
+      text: () => Promise.resolve(NO_TARGET_XML),
+      ok: true
     });
     const position = await targetPosition("A");
     expect(position).toBeNull();
@@ -213,7 +210,8 @@ describe("targetPosition", () => {
     };
 
     (fetch as any).mockResolvedValue({
-      text: () => Promise.resolve(targetXml("0", "0"))
+      text: () => Promise.resolve(targetXml("0", "0")),
+      ok: true
     });
     let position = await targetPosition("A");
     comparePositions(position as IPosition, {
@@ -223,7 +221,8 @@ describe("targetPosition", () => {
     });
 
     (fetch as any).mockResolvedValue({
-      text: () => Promise.resolve(targetXml("000.3998923642", "+05.982345"))
+      text: () => Promise.resolve(targetXml("000.3998923642", "+05.982345")),
+      ok: true
     });
     position = await targetPosition("A");
     comparePositions(position as IPosition, {
@@ -233,7 +232,8 @@ describe("targetPosition", () => {
     });
 
     (fetch as any).mockResolvedValue({
-      text: () => Promise.resolve(targetXml("-00.3998923642", "-05.982345"))
+      text: () => Promise.resolve(targetXml("-00.3998923642", "-05.982345")),
+      ok: true
     });
     position = await targetPosition("A");
     comparePositions(position as IPosition, {
@@ -243,7 +243,8 @@ describe("targetPosition", () => {
     });
 
     (fetch as any).mockResolvedValue({
-      text: () => Promise.resolve(targetXml("+10.895787", "+123.1055345"))
+      text: () => Promise.resolve(targetXml("+10.895787", "+123.1055345")),
+      ok: true
     });
     position = await targetPosition("A");
     comparePositions(position as IPosition, {
@@ -253,7 +254,8 @@ describe("targetPosition", () => {
     });
 
     (fetch as any).mockResolvedValue({
-      text: () => Promise.resolve(targetXml("-0099.7654321", "-123.1055345"))
+      text: () => Promise.resolve(targetXml("-0099.7654321", "-123.1055345")),
+      ok: true
     });
     position = await targetPosition("A");
     comparePositions(position as IPosition, {
