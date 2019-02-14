@@ -180,7 +180,7 @@ export default function targetPosition(
  *
  * Params:
  * -------
- * url: The base URL for the Desame web service.
+ * url: The base URL for the Sesame web service.
  */
 export function setMirror(url: string) {
   BASE_URL = url;
