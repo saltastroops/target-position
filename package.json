@@ -1,0 +1,61 @@
+{
+  "name": "target-position",
+  "version": "0.1.0",
+  "description": "Resolve target names to positions using the Sesame web service.",
+  "main": "lib/index.js",
+  "types": "lib/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "format": "prettier --write package.json src/*.{js,json,md,ts,tsx} src/**/*.{js,json,md,ts,tsx}",
+    "lint": "tslint --project tsconfig.json 'src/**/*.{ts,tsx}'",
+    "lint:fix": "tslint --fix 'src/**/*.{ts,tsx}'",
+    "postversion" : "git push && git push --tags",
+    "prepublishOnly": "npm test && npm run lint && npm run build",
+    "preversion": "npm test && npm run lint",
+    "test": "jest --config jestconfig.json",
+    "test:watch": "jest --watch --config jestconfig.json"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "lint-staged"
+    }
+  },
+  "lint-staged": {
+    "src/**/*.{js,ts,tsx,json,css,graphql,md}": [
+      "prettier --write",
+      "git add"
+    ]
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/saltastroops/target-position.git"
+  },
+  "files": [
+    "lib/**/*"
+  ],
+  "keywords": [
+    "astronomy",
+    "target",
+    "Sesame"
+  ],
+  "author": "SALT Astronomy Operations",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/saltastroops/target-position/issues"
+  },
+  "homepage": "https://github.com/saltastroops/target-position#readme",
+  "devDependencies": {
+    "@types/jest": "^23.3.13",
+    "@types/xml2js": "^0.4.3",
+    "jest": "^24.0.0",
+    "prettier": "^1.16.4",
+    "ts-jest": "^23.10.5",
+    "tslint": "^5.12.1",
+    "tslint-config-prettier": "^1.18.0",
+    "typescript": "^3.3.1"
+  },
+  "dependencies": {
+    "cross-fetch": "^3.0.1",
+    "xml2js": "^0.4.19"
+  }
+}
